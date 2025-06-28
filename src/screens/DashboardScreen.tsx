@@ -40,8 +40,7 @@ export default function DashboardScreen() {
                     onPress={() => navigation.navigate('Ride')}
                 />
                 <View style={styles.hintContainer}>
-                    <Text style={styles.hintText}>Swipe left for History</Text>
-                    <Text style={styles.hintText}>Swipe right for Settings</Text>
+                    <Text style={styles.hintText}>Left Settings | Right History</Text>
                 </View>
             </View>
         </GestureDetector>

@@ -1,8 +1,8 @@
 import React from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import DashboardScreen from '../screens/DashboardScreen';
-import HistoryScreen from '../screens/HistoryScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+import HistoryScreen from '../screens/historyScreens/HistoryScreen.tsx';
+import SettingsScreen from '../screens/settingsScreens/SettingsScreen.tsx';
 import { View, StyleSheet, Dimensions } from 'react-native';
 
 const Tab = createMaterialTopTabNavigator();
@@ -41,9 +41,9 @@ export default function MainTabNavigator() {
                 </View>
             )}
         >
+            <Tab.Screen name="Settings" component={SettingsScreen} />
             <Tab.Screen name="Dashboard" component={DashboardScreen} />
             <Tab.Screen name="History" component={HistoryScreen} />
-            <Tab.Screen name="Settings" component={SettingsScreen} />
         </Tab.Navigator>
     );
 }
