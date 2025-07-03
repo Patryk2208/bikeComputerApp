@@ -19,14 +19,14 @@ type RideScreenNavigationProp = NativeStackNavigationProp<
 
 export default function RideScreen() {
     const navigation = useNavigation<RideScreenNavigationProp>();
-    const { StartNewRide, AddTrackPoint, FinishRide } = useRideStore();
+    const { StartNewRide, AddTrackPoint, FinishRide, PauseRide, ResumeRide } = useRideStore();
     const [isPaused, setIsPaused] = useState(false);
     const [speed, setSpeed] = useState(0);
     const [distance, setDistance] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [elevation, /*setElevation*/] = useState(0);
+    const [elevation, setElevation] = useState(0);
     const [position, setPosition] = useState<any>(null);
-    const [acceleration, /*setAcceleration*/] = useState({ x: 0, y: 0, z: 0 });
+    const [acceleration, setAcceleration] = useState({ x: 0, y: 0, z: 0 });
     const watchId = useRef<number | null>(null);
     const [startTime, setStartTime] = useState<number | null>(null);
     const [lastPosition, setLastPosition] = useState<any>(null);
@@ -79,7 +79,9 @@ export default function RideScreen() {
                     setLastPosition(position);
                 }
             },
-            error => console.error('GPS Error:', error),
+            error => {
+                console.log(error);
+            },
             {
                 enableHighAccuracy: true,
                 distanceFilter: 5,
@@ -92,7 +94,13 @@ export default function RideScreen() {
 
     useEffect(() => {
         const initRide = async () => {
-            await StartNewRide();
+            try {
+                await StartNewRide();
+            }
+            catch (e) {
+                navigation.goBack();
+                return;
+            }
             setStartTime(Date.now());
             startTracking();
         };
@@ -106,12 +114,14 @@ export default function RideScreen() {
 
 
     const togglePause = () => {
-        setIsPaused(!isPaused);
-    };
+        if (!isPaused) {
+            PauseRide();
 
-    const handleLap = () => {
-        // todo implement lap functionality
-        console.log('Lap recorded');
+        } else {
+            setStartTime(Date.now());
+            ResumeRide();
+        }
+        setIsPaused(!isPaused);
     };
 
     const handleFinish = async () => {
@@ -159,14 +169,6 @@ export default function RideScreen() {
                     onPress={handleFinish}
                 >
                     <Text style={styles.buttonText}>Finish</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.button, styles.lapButton]}
-                    onPress={handleLap}
-                    disabled={isPaused}
-                >
-                    <Text style={styles.buttonText}>Lap</Text>
                 </TouchableOpacity>
 
                 <View style={styles.pauseContainer}>

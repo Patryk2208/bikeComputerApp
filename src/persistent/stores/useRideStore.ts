@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {Pause, Ride} from '../database/orm/Rides.ts';
 import { TrackPoint } from "../database/orm/TrackPoints.ts";
+import Repository from "../database/Repository.ts";
 
 interface RideState {
     currentRide: Ride | null;
@@ -11,6 +12,8 @@ interface RideState {
 
     StartNewRide: () => Promise<number>;
     AddTrackPoint: (point: TrackPoint) => Promise<void>;
+    PauseRide: () => Promise<void>;
+    ResumeRide: () => Promise<void>;
     FinishRide: (stats: {
         totalDistance: number;
         avgSpeed: number;
@@ -33,22 +36,9 @@ export const useRideStore = create<RideState>()(
             async StartNewRide() {
                 set({ loading: true, error: null });
                 try {
-                    let pauses : Pause[] = [];
-                    let trackPoints : TrackPoint[] = [];
-                    const newRide: Ride = new Ride(
-                        Date.now().valueOf(),
-                        null,
-                        0,
-                        0,
-                        0,
-                        0,
-                        pauses,
-                        trackPoints
-                    );
-
-                    //const id = await Repository.CreateRide(newRide);
+                    const ride = await Repository.StartNewRide([Date.now(), 0, 0, 0, 0, 0]);
                     set({
-                        currentRide: newRide,
+                        currentRide: ride,
                         loading: false
                     });
                     return 0;
@@ -59,25 +49,52 @@ export const useRideStore = create<RideState>()(
             },
 
             async AddTrackPoint(point: TrackPoint) {
-                const currentRide = get().currentRide;
+                const { currentRide } = get();
                 if (!currentRide) throw new Error('No active ride');
 
-                const fullPoint = {
+                const inPoint = {
                     ...point,
                     RideId: currentRide.RideId,
                     Timestamp: point.Timestamp,
                 };
 
                 try {
-                    //await Repository.AddTrackPoint(fullPoint);
+                    await Repository.AddTrackPoint(
+                        [
+                            [inPoint.RideId, inPoint.Latitude, inPoint.Longitude, inPoint.Timestamp],
+                            [inPoint.TrackPointDetails.Altitude, inPoint.TrackPointDetails.Speed,
+                                inPoint.TrackPointDetails.Accuracy]
+                        ]);
                     set({
                         currentRide: {
                             ...currentRide,
-                            TrackPoints: [...currentRide.TrackPoints, fullPoint]
+                            TrackPoints: [...currentRide.TrackPoints, inPoint]
                         }
                     });
                 } catch (error) {
                     console.error('Failed to save track point:', error);
+                }
+            },
+
+            async PauseRide() {
+                const { currentRide } = get();
+                if (!currentRide) return;
+                try {
+                    await Repository.PauseRide([currentRide.RideId, Date.now()]);
+                }
+                catch (error) {
+                    console.error('Failed to pause ride:', error);
+                }
+            },
+
+            async ResumeRide() {
+                const { currentRide } = get();
+                if (!currentRide) return;
+                try {
+                    await Repository.ResumeRide([Date.now(), currentRide.Pauses.at(-1)!.PauseId]);
+                }
+                catch (error) {
+                    console.error('Failed to pause ride:', error);
                 }
             },
 
@@ -92,15 +109,20 @@ export const useRideStore = create<RideState>()(
                     currentRide.MaxSpeed = stats.maxSpeed;
                     currentRide.ElevationGain = stats.elevationGain
 
-                    /*await Repository.UpdateRide(currentRide);
+                    await Repository.FinishRide([
+                        currentRide.EndTime.valueOf(),
+                        currentRide.TotalDistance,
+                        currentRide.AvgSpeed,
+                        currentRide.MaxSpeed,
+                        currentRide.ElevationGain
+                    ]);
 
-                    const updatedRide = await Repository.getRideById(currentRide.RideId);
-                    if (updatedRide) {
+                    if (currentRide) {
                         set(state => ({
-                            rides: [updatedRide, ...state.rides],
+                            rides: [currentRide, ...state.rides],
                             currentRide: null
                         }));
-                    }*/
+                    }
                 } catch (error) {
                     console.error('Failed to finish ride:', error);
                 }
@@ -109,8 +131,8 @@ export const useRideStore = create<RideState>()(
             async LoadAllRides() {
                 set({ loading: true });
                 try {
-                    //const rides = await Repository.GetAllRides();
-                    //set({ rides, loading: false });
+                    const rides = await Repository.GetAllRides();
+                    set({ rides, loading: false });
                 } catch (error) {
                     set({ error: 'Failed to load rides', loading: false });
                 }
@@ -119,10 +141,11 @@ export const useRideStore = create<RideState>()(
             async GetRideDetails(id) {
                 set({ loading: true });
                 try {
-                    //const ride = await Repository.getRideById(id);
+                    //const ride = await Repository.GetRideById(id);
                     set({ loading: false });
                     //return ride;
                     return null;
+                    //todo
                 } catch (error) {
                     set({ error: 'Failed to load ride details', loading: false });
                     return null;
@@ -132,7 +155,7 @@ export const useRideStore = create<RideState>()(
             async DeleteRide(id) {
                 set({ loading: true });
                 try {
-                    //await Repository.DeleteRide(id);
+                    await Repository.DeleteRide(id);
                     set(state => ({
                         rides: state.rides.filter(ride => ride.RideId !== id),
                         loading: false

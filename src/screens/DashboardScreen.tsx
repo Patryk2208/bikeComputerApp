@@ -12,8 +12,6 @@ import { useNavigation } from '@react-navigation/native';
 >;*/
 
 import { DashboardScreenNavigationProp } from '../types/navigation';
-import database from "../persistent/database/Database.ts";
-import {ResultSet} from "react-native-sqlite-storage";
 
 export default function DashboardScreen() {
     const navigation = useNavigation<DashboardScreenNavigationProp>();

@@ -17,7 +17,7 @@ export default function App() {
                 await InitializeServices();
             }
             catch (error) {
-                console.error("Error caught at mount: ", error);
+                console.error("Mount: ", error);
             }
         }
 
