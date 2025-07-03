@@ -1,42 +1,51 @@
-import React, { useState, /*useEffect*/ } from 'react';
-import { View, Text, StyleSheet, /*FlatList,*/ TouchableOpacity, StatusBar, TextInput } from 'react-native';
-//import RideCard from '../../components/history/RideCard';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, StatusBar, TextInput } from 'react-native';
+import RideCard from '../../components/history/RideCard';
 import FilterModal from '../../components/history/FilterModal';
-//import EmptyState from '../../components/history/EmptyState';
-//import { useRideStore } from '../../../services/stores/useRideStore';
+import EmptyState from '../../components/history/EmptyState';
+import { useRideStore } from '../../persistent/stores/useRideStore';
 import Icon from '@react-native-vector-icons/material-icons';
+import {useNavigation} from "@react-navigation/native";
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../../types/navigation';
+import {Ride} from "../../persistent/database/orm/Rides.ts";
+
+type HistoryScreenNavigationProp = NativeStackNavigationProp<
+    RootStackParamList,
+    'History'
+>;
 
 export default function HistoryScreen() {
-    //const { rides, loadAllRides } = useRideStore();
+    const navigation = useNavigation<HistoryScreenNavigationProp>();
+    const { rides, LoadAllRides } = useRideStore();
     const [showFilters, setShowFilters] = useState(false);
     const [filter, setFilter] = useState<'all' | 'week' | 'month' | 'year'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
-    /*useEffect(() => {
-        loadAllRides();
-    }, []);*/
+    useEffect(() => {
+        LoadAllRides();
+    }, [LoadAllRides]);
 
-    /*const filteredRides = rides.filter(ride => {
+    const filteredRides = rides.filter((ride: Ride) => {
         const now = Date.now();
-        const rideDate = ride.start_time;
+        const rideDate = ride.StartTime;
 
-        if (filter === 'week' && (now - rideDate) > 7 * 24 * 60 * 60 * 1000) return false;
-        if (filter === 'month' && (now - rideDate) > 30 * 24 * 60 * 60 * 1000) return false;
-        if (filter === 'year' && (now - rideDate) > 365 * 24 * 60 * 60 * 1000) return false;
+        if (filter === 'week' && (now - rideDate.valueOf()) > 7 * 24 * 60 * 60 * 1000) return false;
+        if (filter === 'month' && (now - rideDate.valueOf()) > 30 * 24 * 60 * 60 * 1000) return false;
+        if (filter === 'year' && (now - rideDate.valueOf()) > 365 * 24 * 60 * 60 * 1000) return false;
 
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             const dateStr = new Date(rideDate).toLocaleDateString().toLowerCase();
-            const nameStr = ride.name?.toLowerCase() || '';
-            return dateStr.includes(query) || nameStr.includes(query);
+            return dateStr.includes(query);
         }
 
         return true;
-    });*/
+    });
 
-    /*const handleRidePress = (rideId: number) => {
+    const handleRidePress = (rideId: number) => {
         navigation.navigate('RideDetails', { rideId });
-    };*/
+    };
 
     return (
         <View style={styles.container}>
@@ -67,33 +76,32 @@ export default function HistoryScreen() {
             </View>
 
             <View style={styles.statsContainer}>
-                {/*<View style={styles.statCard}>
+                <View style={styles.statCard}>
                     <Text style={styles.statValue}>{filteredRides.length}</Text>
                     <Text style={styles.statLabel}>Rides</Text>
                 </View>
                 <View style={styles.statCard}>
                     <Text style={styles.statValue}>
-                        {filteredRides.reduce((sum, ride) => sum + ride.total_distance, 0).toFixed(1)} km
+                        {filteredRides.reduce((sum: number, ride: Ride) => sum + ride.TotalDistance, 0).toFixed(1)} km
                     </Text>
                     <Text style={styles.statLabel}>Distance</Text>
                 </View>
                 <View style={styles.statCard}>
                     <Text style={styles.statValue}>
-                        {filteredRides.reduce((sum, ride) => sum + ride.elevation_gain, 0).toFixed(0)} m
+                        {filteredRides.reduce((sum: number, ride: Ride) => sum + ride.ElevationGain, 0).toFixed(0)} m
                     </Text>
                     <Text style={styles.statLabel}>Elevation</Text>
-                </View>*/}
-                <View><Text>Placeholder</Text></View>
+                </View>
             </View>
 
-            {/*{filteredRides.length > 0 ? (
+            {filteredRides.length > 0 ? (
                 <FlatList
                     data={filteredRides}
-                    keyExtractor={item => item.id?.toString() || Date.now().toString()}
+                    keyExtractor={item => item.RideId?.toString() || Date.now().toString()}
                     renderItem={({ item }) => (
                         <RideCard
                             ride={item}
-                            onPress={() => handleRidePress(item.id!)}
+                            onPress={() => handleRidePress(item.RideId!)}
                         />
                     )}
                     contentContainerStyle={styles.listContent}
@@ -101,7 +109,7 @@ export default function HistoryScreen() {
                 />
             ) : (
                 <EmptyState onAddRide={() => navigation.navigate('Ride')} />
-            )}*/}
+            )}
 
             <FilterModal
                 visible={showFilters}

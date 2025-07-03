@@ -8,8 +8,9 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/navigation';
 import Icon from '@react-native-vector-icons/material-icons';
-//import { useRideStore } from '../../../services/stores/useRideStore';
+import { useRideStore } from '../../persistent/stores/useRideStore';
 import Geolocation from 'react-native-geolocation-service';
+import {TrackPoint, TrackPointDetails} from '../../persistent/database/orm/TrackPoints.ts';
 
 type RideScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -18,7 +19,7 @@ type RideScreenNavigationProp = NativeStackNavigationProp<
 
 export default function RideScreen() {
     const navigation = useNavigation<RideScreenNavigationProp>();
-    //const { startNewRide, addTrackPoint, finishRide } = useRideStore();
+    const { StartNewRide, AddTrackPoint, FinishRide } = useRideStore();
     const [isPaused, setIsPaused] = useState(false);
     const [speed, setSpeed] = useState(0);
     const [distance, setDistance] = useState(0);
@@ -51,14 +52,19 @@ export default function RideScreen() {
                     setPosition(position);
                     setSpeed(position.coords.speed || 0);
 
-                    /*addTrackPoint({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        altitude: position.coords.altitude,
-                        speed: position.coords.speed,
-                        accuracy: position.coords.accuracy,
-                        timestamp: position.timestamp,
-                    });*/
+                    AddTrackPoint(
+                        new TrackPoint(
+                            useRideStore.getState().currentRide!.RideId,
+                            position.coords.latitude,
+                            position.coords.longitude,
+                            position.timestamp,
+                            new TrackPointDetails(
+                                position.coords.altitude,
+                                position.coords.speed,
+                                position.coords.accuracy
+                            )
+                        )
+                    );
 
                     if (lastPosition) {
                         const newDistance = calculateDistance(
@@ -86,7 +92,7 @@ export default function RideScreen() {
 
     useEffect(() => {
         const initRide = async () => {
-            //await startNewRide();
+            await StartNewRide();
             setStartTime(Date.now());
             startTracking();
         };
@@ -96,7 +102,7 @@ export default function RideScreen() {
         return () => {
             if (watchId.current) Geolocation.clearWatch(watchId.current);
         };
-    }, [startTracking]);
+    }, [StartNewRide, startTracking]);
 
 
     const togglePause = () => {
@@ -111,19 +117,19 @@ export default function RideScreen() {
     const handleFinish = async () => {
         if (watchId.current) Geolocation.clearWatch(watchId.current);
 
-        /*await finishRide({
+        await FinishRide({
             totalDistance: distance,
             avgSpeed: distance > 0 ? (distance / duration) * 3.6 : 0,
             maxSpeed: speed * 3.6,
             elevationGain: elevation,
-        });*/
+        });
 
         navigation.goBack();
     };
 
     const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
         // Haversine formula implementation
-        const R = 6371e3; // Earth radius in meters
+        const R = 6371e3;
         const f1 = lat1 * Math.PI / 180;
         const f2 = lat2 * Math.PI / 180;
         const df = (lat2 - lat1) * Math.PI / 180;

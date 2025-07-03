@@ -5,13 +5,15 @@ export type RootStackParamList = {
     Ride: undefined;
 
     Settings: undefined;
-    History: undefined;
     ExportSettings: undefined;
     OfflineMaps: undefined;
     MapStyle: undefined;
     UnitsSettings: undefined;
     DataManagement: undefined;
     LocationSettings: undefined;
+
+    History: undefined;
+    RideDetails: { rideId: number };
 };
 
 export type DashboardScreenNavigationProp = NativeStackNavigationProp<

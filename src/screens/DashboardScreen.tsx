@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {View, StyleSheet, Text, FlatList, Button} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import StartRideButton from '../components/dashboard/StartRideButton';
 import { useNavigation } from '@react-navigation/native';
@@ -12,6 +12,8 @@ import { useNavigation } from '@react-navigation/native';
 >;*/
 
 import { DashboardScreenNavigationProp } from '../types/navigation';
+import database from "../persistent/database/Database.ts";
+import {ResultSet} from "react-native-sqlite-storage";
 
 export default function DashboardScreen() {
     const navigation = useNavigation<DashboardScreenNavigationProp>();
@@ -24,7 +26,6 @@ export default function DashboardScreen() {
         }
     }, [navigation]);
 
-    // Modern gesture handling with Gesture.Pan()
     const panGesture = Gesture.Pan()
         .minDistance(10)
         .onEnd((e) => {
