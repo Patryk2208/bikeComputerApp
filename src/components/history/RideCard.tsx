@@ -1,16 +1,16 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from '@react-native-vector-icons/material-icons';
-//import { Ride } from '../../../services/database/models/Ride';
+import {Ride} from "../../persistent/database/orm/Rides.ts";
 
 interface RideCardProps {
-    ride: any;
+    ride: Ride;
     onPress: () => void;
 }
 
 export default function RideCard({ ride, onPress } : RideCardProps) {
     const formatDate = (timestamp: number) => {
-        return new Date(timestamp).toLocaleDateString('en-US', {
+        return new Date(timestamp).toLocaleDateString('pl-PL', {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
@@ -30,8 +30,8 @@ export default function RideCard({ ride, onPress } : RideCardProps) {
             <View style={styles.card}>
                 {/* Card Header */}
                 <View style={styles.cardHeader}>
-                    <Text style={styles.date}>{formatDate(ride.start_time)}</Text>
-                    {ride.name && <Text style={styles.rideName}>{ride.name}</Text>}
+                    <Text style={styles.date}>{formatDate(ride.StartTime.valueOf())}</Text>
+                    {ride.Name && <Text style={styles.rideName}>{ride.Name}</Text>}
                 </View>
 
                 {/* Map Placeholder */}
@@ -43,19 +43,19 @@ export default function RideCard({ ride, onPress } : RideCardProps) {
                 {/* Ride Stats */}
                 <View style={styles.statsContainer}>
                     <View style={styles.stat}>
-                        <Text style={styles.statValue}>{ride.total_distance.toFixed(1)} km</Text>
+                        <Text style={styles.statValue}>{ride.TotalDistance.toFixed(1)} km</Text>
                         <Text style={styles.statLabel}>Distance</Text>
                     </View>
                     <View style={styles.stat}>
-                        <Text style={styles.statValue}>{formatDuration(ride.start_time, ride.end_time)}</Text>
+                        <Text style={styles.statValue}>{formatDuration(ride.StartTime.valueOf(), ride.EndTime?.valueOf())}</Text>
                         <Text style={styles.statLabel}>Duration</Text>
                     </View>
                     <View style={styles.stat}>
-                        <Text style={styles.statValue}>{ride.avg_speed.toFixed(1)} km/h</Text>
+                        <Text style={styles.statValue}>{ride.AvgSpeed.toFixed(1)} km/h</Text>
                         <Text style={styles.statLabel}>Avg Speed</Text>
                     </View>
                     <View style={styles.stat}>
-                        <Text style={styles.statValue}>+{ride.elevation_gain.toFixed(0)} m</Text>
+                        <Text style={styles.statValue}>+{ride.ElevationGain.toFixed(0)} m</Text>
                         <Text style={styles.statLabel}>Elevation</Text>
                     </View>
                 </View>

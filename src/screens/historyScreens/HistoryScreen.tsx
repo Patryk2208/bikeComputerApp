@@ -17,14 +17,10 @@ type HistoryScreenNavigationProp = NativeStackNavigationProp<
 
 export default function HistoryScreen() {
     const navigation = useNavigation<HistoryScreenNavigationProp>();
-    const { rides, LoadAllRides } = useRideStore();
+    const { rides } = useRideStore();
     const [showFilters, setShowFilters] = useState(false);
     const [filter, setFilter] = useState<'all' | 'week' | 'month' | 'year'>('all');
     const [searchQuery, setSearchQuery] = useState('');
-
-    useEffect(() => {
-        LoadAllRides();
-    }, [LoadAllRides]);
 
     const filteredRides = rides.filter((ride: Ride) => {
         const now = Date.now();

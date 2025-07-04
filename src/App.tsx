@@ -30,6 +30,9 @@ export default function App() {
             }
         }
 
+
+        //console.error("Database path:", `${RNFS.DocumentDirectoryPath}`);
+
         InitializeApp();
 
         return () => {

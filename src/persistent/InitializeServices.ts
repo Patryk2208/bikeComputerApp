@@ -10,10 +10,7 @@ export async function InitializeServices() {
         //useSettingsStore.setState({ settings });
 
         await useRideStore.getState().LoadAllRides();
-
-        //console.log('App initialized successfully');
     } catch (error) {
-        //console.error('App initialization failed:', error);
         throw error;
     }
 }

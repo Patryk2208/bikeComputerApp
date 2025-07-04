@@ -1,6 +1,5 @@
 import Database from "./Database.ts";
-import {Transaction} from "react-native-sqlite-storage";
-import {Ride} from "./orm/Rides.ts";
+import {Pause, Ride} from "./orm/Rides.ts";
 
 class Repository {
     private Db: typeof Database
@@ -9,75 +8,102 @@ class Repository {
     }
 
     async StartNewRide(parameters?: any[]): Promise<Ride> {
-        const op = async (txn: Transaction, params?: any[]): Promise<Ride> => {
-            return this.Db.InsertRide(txn, params)
-                .then(id => {
-                    return this.Db.GetRideById(txn, [id])
-                })
-                .then(res => {
-                    return res;
-                });
+        try {
+            await this.Db.StartTransaction();
+            let id = await this.Db.InsertRide(parameters);
+            let ride = await this.Db.GetRideById([id]);
+            await this.Db.Commit();
+            return ride;
+        } catch (error) {
+            await this.Db.Rollback();
+            throw error;
         }
-        return this.Db.Transaction(op, parameters)
-            .then(res => {
-                return res;
-            })
-            .catch(error => {
-                console.error(error.message);
-                return new Ride(0, 0, 0, 0, 0, 0, [], []);
-            });
     }
 
     async FinishRide(parameters: any[]): Promise<void> {
-        const op = async (txn: Transaction, params?: any[]): Promise<void> => {
-            return this.Db.UpdateRide(txn, params);
+        try {
+            await this.Db.StartTransaction();
+            await this.Db.UpdateRide(parameters);
+            await this.Db.Commit();
+        } catch (error) {
+            await this.Db.Rollback();
+            throw error;
         }
-        await this.Db.Transaction(op, parameters);
-        console.error("finished");
     }
 
     async AddTrackPoint(parameters: any[][]): Promise<void> {
-        const op = async (txn: Transaction, params?: any[][]): Promise<void> => {
-            if(params === undefined || params[0] === undefined || params[1] === undefined)
-                throw new Error(
-                    "Invalid parameters for AddTrackPoint"
-                )
-            return this.Db.InsertTrackPoint(txn, params[0])
-                .then(inserted_track_point => {
-                    let params_track_point_details = [inserted_track_point, params[1][0], params[1][1], params[1][2]];
-                    this.Db.InsertTrackPointData(txn, params_track_point_details);
-                });
-
+        if(parameters === undefined || parameters[0] === undefined || parameters[1] === undefined)
+            throw new Error(
+                "Invalid parameters for AddTrackPoint"
+            )
+        try {
+            await this.Db.StartTransaction();
+            let inserted_track_point = await this.Db.InsertTrackPoint(parameters[0]);
+            let params_track_point_details = [inserted_track_point, parameters[1][0], parameters[1][1], parameters[1][2]];
+            await this.Db.InsertTrackPointData(params_track_point_details);
+            await this.Db.Commit();
+        } catch (error) {
+            await this.Db.Rollback();
+            throw error;
         }
-        await this.Db.Transaction(op, parameters);
     }
 
-    async PauseRide(parameters?: any[]): Promise<number> {
-        const op = async (txn: Transaction, params?: any[]): Promise<number> => {
-            return this.Db.InsertPause(txn, params);
+    async PauseRide(parameters?: any[]): Promise<Pause> {
+        try {
+            await this.Db.StartTransaction();
+            let id = await this.Db.InsertPause(parameters);
+            let p = await this.Db.GetPauseById([id]);
+            await this.Db.Commit();
+            return p;
+        } catch (error) {
+            await this.Db.Rollback();
+            throw error;
         }
-        return await this.Db.Transaction(op, parameters);
     }
 
     async ResumeRide(parameters?: any[]): Promise<void> {
-        const op = async (txn: Transaction, params?: any[]): Promise<void> => {
-            return this.Db.UpdatePause(txn, params);
+        try {
+            await this.Db.StartTransaction();
+            await this.Db.UpdatePause(parameters);
+            await this.Db.Commit();
+        } catch (error) {
+            await this.Db.Rollback();
+            throw error;
         }
-        await this.Db.Transaction(op, parameters);
     }
 
     async GetAllRides(): Promise<Ride[]> {
-        const op = async (txn: Transaction, params?: any[]): Promise<Ride[]> => {
-            return this.Db.GetAllRides(txn, params);
+        try {
+            await this.Db.StartTransaction();
+            let rides = await this.Db.GetAllRides();
+            for (const ride of rides) {
+                let trackpoints = await this.Db.GetTrackPointsForRide([ride.RideId]);
+                for (const trackpoint of trackpoints) {
+                    let tpd = await this.Db.GetTrackPointDataForTrackPoint([trackpoint.TrackPointId]);
+                    trackpoint.TrackPointDetails = tpd;
+                }
+                ride.TrackPoints = trackpoints;
+
+                let pauses = await this.Db.GetPausesForRide([ride.RideId]);
+                ride.Pauses = pauses;
+            }
+            await this.Db.Commit();
+            return rides;
+        } catch (error) {
+            await this.Db.Rollback();
+            throw error;
         }
-        return await this.Db.Transaction(op);
     }
 
     async DeleteRide(id: number): Promise<void> {
-        const op = async (txn: Transaction, params?: any[]): Promise<void> => {
-            return this.Db.DeleteRide(txn, params);
+        try {
+            await this.Db.StartTransaction();
+            await this.Db.DeleteRide([id]);
+            await this.Db.Commit();
+        } catch (error) {
+            await this.Db.Rollback();
+            throw error;
         }
-        await this.Db.Transaction(op, [id]);
     }
 }
 

@@ -36,7 +36,8 @@ export const useRideStore = create<RideState>()(
             async StartNewRide() {
                 set({ loading: true, error: null });
                 try {
-                    const ride = await Repository.StartNewRide([Date.now(), 0, 0, 0, 0, 0]);
+                    let now = Date.now();
+                    const ride = await Repository.StartNewRide([now.toString(), now, 0, 0, 0, 0, 0]);
                     set({
                         currentRide: ride,
                         loading: false
@@ -80,7 +81,8 @@ export const useRideStore = create<RideState>()(
                 const { currentRide } = get();
                 if (!currentRide) return;
                 try {
-                    await Repository.PauseRide([currentRide.RideId, Date.now()]);
+                    let p = await Repository.PauseRide([currentRide.RideId, Date.now()]);
+                    currentRide.Pauses = [...currentRide.Pauses, p];
                 }
                 catch (error) {
                     console.error('Failed to pause ride:', error);
@@ -114,7 +116,8 @@ export const useRideStore = create<RideState>()(
                         currentRide.TotalDistance,
                         currentRide.AvgSpeed,
                         currentRide.MaxSpeed,
-                        currentRide.ElevationGain
+                        currentRide.ElevationGain,
+                        currentRide.RideId
                     ]);
 
                     if (currentRide) {
@@ -131,8 +134,8 @@ export const useRideStore = create<RideState>()(
             async LoadAllRides() {
                 set({ loading: true });
                 try {
-                    const rides = await Repository.GetAllRides();
-                    set({ rides, loading: false });
+                    const r = await Repository.GetAllRides();
+                    set({ rides: r, loading: false });
                 } catch (error) {
                     set({ error: 'Failed to load rides', loading: false });
                 }

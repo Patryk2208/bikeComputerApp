@@ -4,6 +4,7 @@ export class Ride {
     public StartTime: Date;
     public EndTime: Date | null = null;
     constructor(
+                public Name : string,
                 startTime : number,
                 endTime : number | null,
                 public TotalDistance : number,

@@ -116,7 +116,6 @@ export default function RideScreen() {
     const togglePause = () => {
         if (!isPaused) {
             PauseRide();
-
         } else {
             setStartTime(Date.now());
             ResumeRide();
