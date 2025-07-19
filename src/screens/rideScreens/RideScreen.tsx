@@ -1,8 +1,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View, PermissionsAndroid} from 'react-native';
 import SpeedDisplay from '../../components/ride/SpeedDisplay';
 import MetricsBar from '../../components/ride/MetricsBar';
-import MapPreview from '../../components/ride/MapPreview';
 import DataSection from '../../components/ride/DataSection';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -11,6 +10,7 @@ import Icon from '@react-native-vector-icons/material-icons';
 import { useRideStore } from '../../persistent/stores/useRideStore';
 import Geolocation from 'react-native-geolocation-service';
 import {TrackPoint, TrackPointDetails} from '../../persistent/database/orm/TrackPoints.ts';
+import MapPreview from "../../components/ride/MapPreview.tsx";
 
 type RideScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -30,6 +30,51 @@ export default function RideScreen() {
     const watchId = useRef<number | null>(null);
     const [startTime, setStartTime] = useState<number | null>(null);
     const [lastPosition, setLastPosition] = useState<any>(null);
+    const [isLocationPermitted, setIsLocationPermitted] = useState(false);
+
+
+    useEffect(() => {
+        const initRide = async () => {
+            try {
+                await StartNewRide();
+            }
+            catch (e) {
+                navigation.goBack();
+                return;
+            }
+            setStartTime(Date.now());
+            startTracking();
+        };
+        const requestPermissions = async () => {
+            const status = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Location Permission',
+                    message: 'We need your location for location and speed, without it the ride will not be started.',
+                    buttonPositive: 'OK',
+                    buttonNegative: 'Cancel',
+                    buttonNeutral: 'Ask Later'
+                }
+            );
+            if (status !== PermissionsAndroid.RESULTS.GRANTED) {
+                console.log('Location permission denied');
+                navigation.goBack();
+            }
+        };
+
+        requestPermissions().then(
+            ()=> {
+                initRide();
+            },
+            () => {
+                navigation.goBack();
+            }
+        );
+
+        return () => {
+            if (watchId.current) Geolocation.clearWatch(watchId.current);
+        };
+    }, []);
 
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
@@ -92,26 +137,6 @@ export default function RideScreen() {
 // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    useEffect(() => {
-        const initRide = async () => {
-            try {
-                await StartNewRide();
-            }
-            catch (e) {
-                navigation.goBack();
-                return;
-            }
-            setStartTime(Date.now());
-            startTracking();
-        };
-
-        initRide();
-
-        return () => {
-            if (watchId.current) Geolocation.clearWatch(watchId.current);
-        };
-    }, [StartNewRide, startTracking]);
-
 
     const togglePause = () => {
         if (!isPaused) {
@@ -158,6 +183,7 @@ export default function RideScreen() {
     };
 
     return (
+        isLocationPermitted ? (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" />
 
@@ -198,7 +224,7 @@ export default function RideScreen() {
                 />
 
                 {/* Map Preview */}
-                <MapPreview positions={lastPosition ? [lastPosition] : []} />
+                <MapPreview/>
 
                 {/* Data Section */}
                 <DataSection
@@ -208,6 +234,11 @@ export default function RideScreen() {
                 />
             </View>
         </SafeAreaView>
+        ) : (
+            <View>
+                <Text>Location permission not granted</Text>
+            </View>
+        )
     );
 };
 

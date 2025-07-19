@@ -1,15 +1,8 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {View, StyleSheet, Text, FlatList, Button} from 'react-native';
+import React, {useCallback} from 'react';
+import {View, StyleSheet, Text} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import StartRideButton from '../components/dashboard/StartRideButton';
 import { useNavigation } from '@react-navigation/native';
-//import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-//import { RootStackParamList } from '../types/navigation';
-
-/*type DashboardScreenNavigationProp = NativeStackNavigationProp<
-    RootStackParamList,
-    'Dashboard'
->;*/
 
 import { DashboardScreenNavigationProp } from '../types/navigation';
 

@@ -1,16 +1,26 @@
 import database from './database/Database.ts';
 import { useRideStore } from './stores/useRideStore';
-//import { SettingsStorage } from './storage/SettingsStorage';
+import { useSettingsStore } from './stores/useSettingsStore';
+import {Step, SagaWorkflow} from "../utils/sagaUtils.ts";
 
 export async function InitializeServices() {
-    try {
-        await database.Initialize();
 
-        //const settings = await SettingsStorage.loadSettings();
-        //useSettingsStore.setState({ settings });
-
-        await useRideStore.getState().LoadAllRides();
-    } catch (error) {
-        throw error;
-    }
+    let initializationSteps: Step[] = [
+        new Step(database.Initialize, database.Close),
+        new Step(useSettingsStore.getState().LoadSettings, () => {}),
+        new Step(useRideStore.getState().LoadAllRides, () => {}),
+    ]
+    let workflow = new SagaWorkflow();
+    workflow.AddJobs(initializationSteps);
+    workflow.Run().then(
+        (success) => {
+            if (success) {
+                console.log("Initialization successful");
+            }
+            else {
+                console.log("Initialization failed");
+                throw new Error("Initialization failed");
+            }
+        }
+    )
 }

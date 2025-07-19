@@ -1,9 +1,9 @@
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 interface SegmentedControlProps {
-    options: { label: string; value: number; }[];
-    selectedValue: number;
-    onValueChange: (value: number) => void;
+    options: { label: string; value: string; }[];
+    selectedValue: string;
+    onValueChange: (value: string) => void;
 }
 
 export default function SegmentedControl({

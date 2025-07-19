@@ -7,10 +7,12 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MainNavigator from './navigation/MainNavigator';
 import {InitializeServices} from "./persistent/InitializeServices.ts";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import database from "./persistent/database/Database.ts";
+import AppLoadingScreen from "./screens/AppLoadingScreen.tsx";
 
 export default function App() {
+    const [isAppReady, setIsAppReady] = useState(false);
     useEffect(() => {
         const InitializeApp = async () => {
             try {
@@ -30,20 +32,26 @@ export default function App() {
             }
         }
 
-
-        //console.error("Database path:", `${RNFS.DocumentDirectoryPath}`);
-
-        InitializeApp();
+        InitializeApp().then(
+            () => {
+                setIsAppReady(true);
+            },
+            (error) => {
+                console.error("Error caught at mount: ", error);
+            }
+        )
 
         return () => {
-            CloseApp();
+            CloseApp(); //todo
         }
 
     }, [])
 
-    return (
+    return isAppReady ? (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <MainNavigator />
         </GestureHandlerRootView>
+    ) : (
+        <AppLoadingScreen />
     );
 }

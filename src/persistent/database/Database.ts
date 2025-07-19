@@ -565,7 +565,7 @@ class Database {
                 throw err;
             });
     }
-
+ //todo
     async DeleteMapTile(params?: any[]): Promise<void> {
         if(params === undefined)
             throw new Error(

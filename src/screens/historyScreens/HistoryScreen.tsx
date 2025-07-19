@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, StatusBar, TextInput } from 'react-native';
 import RideCard from '../../components/history/RideCard';
 import FilterModal from '../../components/history/FilterModal';

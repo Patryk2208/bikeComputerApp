@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import SegmentedControl from "../../components/common/SegmentedControl.tsx";
+import {useSettingsStore} from "../../persistent/stores/useSettingsStore.ts";
 
 type SettingsScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -16,11 +17,7 @@ type SettingsScreenNavigationProp = NativeStackNavigationProp<
 export default function SettingsScreen() {
     const navigation = useNavigation<SettingsScreenNavigationProp>();
 
-    // State for toggle settings
-    const [useMetric, setUseMetric] = useState(0);
-    const [autoDownload, setAutoDownload] = useState(true);
-    const [autoBackup, setAutoBackup] = useState(false);
-    const [diagnosticData, setDiagnosticData] = useState(true);
+    const {unitSystem, setUnitSystem, } = useSettingsStore()
 
     return (
         <ScrollView style={styles.container}>
@@ -30,15 +27,15 @@ export default function SettingsScreen() {
             <SettingsSection title="Units">
                 <SegmentedControl
                     options={[
-                        { label: 'Metric', value: 0 },
-                        { label: 'Imperial', value: 1 },
+                        { label: 'Metric', value: "metric" },
+                        { label: 'Imperial', value: "imperial" },
                     ]}
-                    selectedValue={useMetric}
-                    onValueChange={setUseMetric}
+                    selectedValue={unitSystem}
+                    onValueChange={setUnitSystem}
                 />
             </SettingsSection>
 
-            {/* Map Configuration */}
+            {/* Map Configuration
             <SettingsSection title="Map Configuration">
                 <NavigationItem
                     label="Offline Maps"
@@ -55,9 +52,9 @@ export default function SettingsScreen() {
                     value={autoDownload}
                     onValueChange={setAutoDownload}
                 />
-            </SettingsSection>
+            </SettingsSection>*/}
 
-            {/* Data Management */}
+            {/* Data Management
             <SettingsSection title="Data Management">
                 <NavigationItem
                     label="Export Format"
@@ -75,7 +72,7 @@ export default function SettingsScreen() {
                     onPress={() => console.log('Clear cache')}
                     isDestructive
                 />
-            </SettingsSection>
+            </SettingsSection>*/}
 
             {/* Privacy & Security */}
             <SettingsSection title="Privacy & Security">
@@ -84,11 +81,11 @@ export default function SettingsScreen() {
                     value="High"
                     onPress={() => navigation.navigate('LocationSettings')}
                 />
-                <ToggleItem
+                {/*<ToggleItem
                     label="Share Diagnostic Data"
                     value={diagnosticData}
                     onValueChange={setDiagnosticData}
-                />
+                />*/}
             </SettingsSection>
 
             {/* About Section */}

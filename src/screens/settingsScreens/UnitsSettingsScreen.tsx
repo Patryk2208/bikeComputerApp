@@ -4,12 +4,11 @@ import SettingsSection from '../../components/settings/SettingsSection';
 import BackButton from '../../components/common/BackButton';
 import SegmentedControl from '../../components/common/SegmentedControl';
 import { useNavigation } from '@react-navigation/native';
+import {useSettingsStore} from "../../persistent/stores/useSettingsStore.ts";
 
 export default function UnitsSettingsScreen() {
     const navigation = useNavigation();
-    const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric');
-    const [temperatureUnit, setTemperatureUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
-    const [timeFormat, setTimeFormat] = useState<'24h' | '12h'>('24h');
+    const { unitSystem, temperatureUnit, timeFormat, setUnitSystem, setTemperatureUnit, setTimeFormat } = useSettingsStore();
 
     return (
         <ScrollView style={styles.container}>
@@ -26,20 +25,20 @@ export default function UnitsSettingsScreen() {
                         { label: 'Imperial', value: 'imperial' },
                     ]}
                     selectedValue={unitSystem}
-                    onValueChange={(value) => setUnitSystem(value as 'metric' | 'imperial')}
+                    onValueChange={setUnitSystem} //todo
                 />
                 <Text style={styles.description}>
                     {unitSystem === 'metric'
-                        ? 'Kilometers, meters, Celsius'
-                        : 'Miles, feet, Fahrenheit'}
+                        ? 'Kilometers, meters'
+                        : 'Miles, feet'}
                 </Text>
             </SettingsSection>
 
             <SettingsSection title="Temperature Units">
                 <SegmentedControl
                     options={[
-                        { label: '°C', value: 'celsius' },
-                        { label: '°F', value: 'fahrenheit' },
+                        { label: '°C', value: "celsius" },
+                        { label: '°F', value: "fahrenheit" },
                     ]}
                     selectedValue={temperatureUnit}
                     onValueChange={(value) => setTemperatureUnit(value as 'celsius' | 'fahrenheit')}
