@@ -5,11 +5,7 @@ export type RootStackParamList = {
     Ride: undefined;
 
     Settings: undefined;
-    ExportSettings: undefined;
-    OfflineMaps: undefined;
-    MapStyle: undefined;
     UnitsSettings: undefined;
-    DataManagement: undefined;
     LocationSettings: undefined;
 
     History: undefined;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import {Pause, Ride} from '../database/orm/Rides.ts';
+import { Ride } from '../database/orm/Rides.ts';
 import { TrackPoint } from "../database/orm/TrackPoints.ts";
 import Repository from "../database/Repository.ts";
 
@@ -144,11 +144,9 @@ export const useRideStore = create<RideState>()(
             async GetRideDetails(id) {
                 set({ loading: true });
                 try {
-                    //const ride = await Repository.GetRideById(id);
+                    const ride = await Repository.GetRideById(id);
                     set({ loading: false });
-                    //return ride;
-                    return null;
-                    //todo
+                    return ride;
                 } catch (error) {
                     set({ error: 'Failed to load ride details', loading: false });
                     return null;

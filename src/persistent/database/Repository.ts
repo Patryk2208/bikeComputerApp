@@ -95,6 +95,24 @@ class Repository {
         }
     }
 
+    async GetRideById(id: number): Promise<Ride> {
+        try {
+            await this.Db.StartTransaction();
+            let ride = await this.Db.GetRideById([id]);
+            let trackpoints = await this.Db.GetTrackPointsForRide([ride.RideId]);
+            for (const trackpoint of trackpoints) {
+                let tpd = await this.Db.GetTrackPointDataForTrackPoint([trackpoint.TrackPointId]);
+                trackpoint.TrackPointDetails = tpd;
+            }
+            ride.TrackPoints = trackpoints;
+            return ride;
+        }
+        catch (error) {
+            await this.Db.Rollback();
+            throw error;
+        }
+    }
+
     async DeleteRide(id: number): Promise<void> {
         try {
             await this.Db.StartTransaction();

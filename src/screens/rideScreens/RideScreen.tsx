@@ -11,6 +11,7 @@ import { useRideStore } from '../../persistent/stores/useRideStore';
 import Geolocation from 'react-native-geolocation-service';
 import {TrackPoint, TrackPointDetails} from '../../persistent/database/orm/TrackPoints.ts';
 import MapPreview from "../../components/ride/MapPreview.tsx";
+import {LoadingScreen} from "../LoadingScreen.tsx";
 
 type RideScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -31,6 +32,7 @@ export default function RideScreen() {
     const [startTime, setStartTime] = useState<number | null>(null);
     const [lastPosition, setLastPosition] = useState<any>(null);
     const [isLocationPermitted, setIsLocationPermitted] = useState(false);
+    const [isScreenReady, setIsScreenReady] = useState(false);
 
 
     useEffect(() => {
@@ -64,10 +66,11 @@ export default function RideScreen() {
 
         requestPermissions().then(
             ()=> {
-                initRide();
-            },
-            () => {
-                navigation.goBack();
+                initRide().then(
+                    () => {
+                        setIsScreenReady(true);
+                    }
+                )
             }
         );
 
@@ -183,7 +186,7 @@ export default function RideScreen() {
     };
 
     return (
-        isLocationPermitted ? (
+        isScreenReady ? (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" />
 
@@ -235,9 +238,7 @@ export default function RideScreen() {
             </View>
         </SafeAreaView>
         ) : (
-            <View>
-                <Text>Location permission not granted</Text>
-            </View>
+            <LoadingScreen />
         )
     );
 };

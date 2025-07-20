@@ -8,6 +8,8 @@ import RideScreen from '../screens/rideScreens/RideScreen.tsx';
 import UnitsSettingsScreen from '../screens/settingsScreens/UnitsSettingsScreen';
 import LocationSettingsScreen from '../screens/settingsScreens/LocationSettingsScreen';
 
+import RideDetailsScreen from "../screens/historyScreens/RideDetailsScreen.tsx";
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function MainNavigator() {
@@ -29,6 +31,7 @@ export default function MainNavigator() {
                 <Stack.Screen name="LocationSettings" component={LocationSettingsScreen} />
 
                 {/* History Screens */}
+                <Stack.Screen name="RideDetails" component={RideDetailsScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

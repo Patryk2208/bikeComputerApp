@@ -12,7 +12,7 @@ export async function InitializeServices() {
     ]
     let workflow = new SagaWorkflow();
     workflow.AddJobs(initializationSteps);
-    workflow.Run().then(
+    await workflow.Run().then(
         (success) => {
             if (success) {
                 console.log("Initialization successful");
