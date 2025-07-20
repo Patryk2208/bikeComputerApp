@@ -1,35 +1,43 @@
 import { create } from 'zustand';
 import {createJSONStorage, persist} from 'zustand/middleware';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import DeviceInfo from "react-native-device-info";
 
 interface SettingsState {
     theme: "light" | "dark";
     unitSystem: "metric" | "imperial";
     temperatureUnit: "celsius" | "fahrenheit";
     timeFormat: "12h" | "24h";
-    locationPrecision: "High" | "Low";
+    locationPrecision: "high" | "low";
+    appVersion: string;
+    buildNumber: string;
 
-    LoadSettings: () => Promise<void>;
     setTheme: (theme: "light" | "dark") => void;
     setUnitSystem: (unitSystem: "metric" | "imperial") => void;
     setTemperatureUnit: (temperatureUnit: "celsius" | "fahrenheit") => void;
     setTimeFormat: (timeFormat: "12h" | "24h") => void;
-    setLocationPrecision: (locationPrecision: "High" | "Low") => void;
+    setLocationPrecision: (locationPrecision: "high" | "low") => void;
+
+    LoadSettings: () => Promise<void>;
+    ResetSettings: () => void;
+}
+
+const defaultValues = {
+    theme: "light" as "light" | "dark",
+    unitSystem: "metric" as "metric" | "imperial",
+    temperatureUnit: "celsius" as "celsius" | "fahrenheit",
+    timeFormat: "24h" as "12h" | "24h",
+    locationPrecision: "high" as "high" | "low",
+    appVersion: "",
+    buildNumber: ""
 }
 
 export const useSettingsStore = create<SettingsState>()(
     persist(
         (set, get) => ({
-            theme: "light",
-            unitSystem: "metric",
-            temperatureUnit: "celsius",
-            timeFormat: "24h",
-            locationPrecision: "High",
-            LoadSettings: async () => {
-                await new Promise((resolve) => {
-                    return useSettingsStore.persist.onFinishHydration(resolve);
-                })
-            },
+            ...defaultValues,
+            appVersion: DeviceInfo.getVersion(),
+            buildNumber: DeviceInfo.getBuildNumber(),
             setTheme: (theme: "light" | "dark") => {
                 set({ theme });
             },
@@ -42,9 +50,25 @@ export const useSettingsStore = create<SettingsState>()(
             setTimeFormat: (timeFormat: "12h" | "24h") => {
                 set({ timeFormat });
             },
-            setLocationPrecision: (locationPrecision: "High" | "Low") => {
+            setLocationPrecision: (locationPrecision: "high" | "low") => {
                 set({ locationPrecision });
             },
+            LoadSettings: async () => {
+                await new Promise((resolve) => {
+                    return useSettingsStore.persist.onFinishHydration(resolve);
+                });
+                if(DeviceInfo.getVersion() !== get().appVersion)
+                {
+                    set({appVersion: DeviceInfo.getVersion()});
+                }
+                if(DeviceInfo.getBuildNumber() !== get().buildNumber)
+                {
+                    set({buildNumber: DeviceInfo.getBuildNumber()});
+                }
+            },
+            ResetSettings: () => {
+                set(defaultValues);
+            }
         }),
         {
             name: 'settings-storage',

@@ -21,14 +21,14 @@ export default function UnitsSettingsScreen() {
             <SettingsSection title="Measurement System">
                 <SegmentedControl
                     options={[
-                        { label: 'Metric', value: 'metric' },
-                        { label: 'Imperial', value: 'imperial' },
+                        { label: 'Metric', value: "metric" },
+                        { label: 'Imperial', value: "imperial" },
                     ]}
                     selectedValue={unitSystem}
-                    onValueChange={setUnitSystem} //todo
+                    onValueChange={(value) => setUnitSystem(value as "metric" | "imperial")}
                 />
                 <Text style={styles.description}>
-                    {unitSystem === 'metric'
+                    {unitSystem === "metric"
                         ? 'Kilometers, meters'
                         : 'Miles, feet'}
                 </Text>
@@ -41,18 +41,18 @@ export default function UnitsSettingsScreen() {
                         { label: '°F', value: "fahrenheit" },
                     ]}
                     selectedValue={temperatureUnit}
-                    onValueChange={(value) => setTemperatureUnit(value as 'celsius' | 'fahrenheit')}
+                    onValueChange={(value) => setTemperatureUnit(value as "celsius" | "fahrenheit")}
                 />
             </SettingsSection>
 
             <SettingsSection title="Time Format">
                 <SegmentedControl
                     options={[
-                        { label: '24-hour', value: '24h' },
-                        { label: '12-hour', value: '12h' },
+                        { label: '24-hour', value: "24h" },
+                        { label: '12-hour', value: "12h" },
                     ]}
                     selectedValue={timeFormat}
-                    onValueChange={(value) => setTimeFormat(value as '24h' | '12h')}
+                    onValueChange={(value) => setTimeFormat(value as "24h" | "12h")}
                 />
             </SettingsSection>
 

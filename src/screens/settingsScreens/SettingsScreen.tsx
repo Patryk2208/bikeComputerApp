@@ -1,7 +1,5 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {Button, ScrollView, StyleSheet, Text, View} from 'react-native';
 import SettingsSection from '../../components/settings/SettingsSection';
-import ToggleItem from '../../components/settings/ToggleItem';
 import NavigationItem from '../../components/settings/NavigationItem';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,97 +15,55 @@ type SettingsScreenNavigationProp = NativeStackNavigationProp<
 export default function SettingsScreen() {
     const navigation = useNavigation<SettingsScreenNavigationProp>();
 
-    const {unitSystem, setUnitSystem, } = useSettingsStore()
+    const {theme, setTheme, ResetSettings, appVersion, buildNumber} = useSettingsStore()
 
     return (
         <ScrollView style={styles.container}>
             <Text style={styles.header}>Settings</Text>
 
-            {/* Units Settings */}
-            <SettingsSection title="Units">
+            {/* Config Settings */}
+            <SettingsSection title="Preferences">
                 <SegmentedControl
                     options={[
-                        { label: 'Metric', value: "metric" },
-                        { label: 'Imperial', value: "imperial" },
+                        { label: 'Light', value: "light" },
+                        { label: 'Dark', value: "dark" },
                     ]}
-                    selectedValue={unitSystem}
-                    onValueChange={setUnitSystem}
+                    selectedValue={theme}
+                    onValueChange={(value) => {setTheme(value as "light" | "dark");}}
+                />
+                <Button title={"More"} onPress={() => navigation.navigate('UnitsSettings')} />
+                <NavigationItem
+                    label="Unit Settings"
+                    value="High" //todo
+                    onPress={() => navigation.navigate('UnitsSettings')}
                 />
             </SettingsSection>
 
-            {/* Map Configuration
-            <SettingsSection title="Map Configuration">
-                <NavigationItem
-                    label="Offline Maps"
-                    value="1.2GB"
-                    onPress={() => navigation.navigate('OfflineMaps')}
-                />
-                <NavigationItem
-                    label="Map Style"
-                    value="Basic"
-                    onPress={() => navigation.navigate('MapStyle')}
-                />
-                <ToggleItem
-                    label="Auto-Download Maps"
-                    value={autoDownload}
-                    onValueChange={setAutoDownload}
-                />
-            </SettingsSection>*/}
-
-            {/* Data Management
-            <SettingsSection title="Data Management">
-                <NavigationItem
-                    label="Export Format"
-                    value="GPX"
-                    onPress={() => navigation.navigate('ExportSettings')}
-                />
-                <ToggleItem
-                    label="Auto-Backup to Cloud"
-                    value={autoBackup}
-                    onValueChange={setAutoBackup}
-                />
-                <NavigationItem
-                    label="Clear Cache"
-                    value="24MB"
-                    onPress={() => console.log('Clear cache')}
-                    isDestructive
-                />
-            </SettingsSection>*/}
-
-            {/* Privacy & Security */}
-            <SettingsSection title="Privacy & Security">
+            {/* Performance Settings */}
+            <SettingsSection title="Performance Settings">
                 <NavigationItem
                     label="Location Accuracy"
-                    value="High"
+                    value="High" //todo
                     onPress={() => navigation.navigate('LocationSettings')}
                 />
-                {/*<ToggleItem
-                    label="Share Diagnostic Data"
-                    value={diagnosticData}
-                    onValueChange={setDiagnosticData}
-                />*/}
             </SettingsSection>
 
             {/* About Section */}
             <SettingsSection title="About">
                 <View style={styles.infoItem}>
                     <Text style={styles.infoLabel}>Version</Text>
-                    <Text style={styles.infoValue}>1.0.0 (Build 102)</Text>
+                    <Text style={styles.infoValue}>{appVersion} ({buildNumber})</Text>
                 </View>
                 <NavigationItem
-                    label="Rate App"
-                    onPress={() => console.log('Rate app')}
-                />
-                <NavigationItem
                     label="Help Center"
-                    onPress={() => console.log('Help center')}
+                    onPress={() => console.log('Help center')} //todo redirect to repo
                 />
             </SettingsSection>
 
             {/* Reset Button */}
             <View style={styles.resetContainer}>
-                <Text style={styles.resetButton} onPress={() => console.log('Reset defaults')}>
-                    Reset to Defaults
+                <Text style={styles.resetButton} onPress={ResetSettings}>
+                    Reset Settings
                 </Text>
             </View>
         </ScrollView>

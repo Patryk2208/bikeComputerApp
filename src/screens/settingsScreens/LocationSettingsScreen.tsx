@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {Text, ScrollView, StyleSheet, View} from 'react-native';
 import SettingsSection from '../../components/settings/SettingsSection';
 import ToggleItem from '../../components/settings/ToggleItem';
 import NavigationItem from '../../components/settings/NavigationItem';
 import BackButton from "../../components/common/BackButton.tsx";
 import {useNavigation} from "@react-navigation/native";
+import {useSettingsStore} from "../../persistent/stores/useSettingsStore.ts";
+import OpenSettings from 'react-native-open-settings';
 
 export default function LocationSettingsScreen() {
-    const [locationAccuracy, setLocationAccuracy] = useState('high');
-    const [backgroundTracking, setBackgroundTracking] = useState(true);
-    const [crashDetection, setCrashDetection] = useState(true);
+    const {locationPrecision, setLocationPrecision} = useSettingsStore();
     const navigation = useNavigation();
 
     return (
@@ -24,71 +24,32 @@ export default function LocationSettingsScreen() {
                 <ToggleItem
                     label="High Accuracy"
                     description="GPS + Network (Best for riding)"
-                    value={locationAccuracy === 'high'}
-                    onValueChange={() => setLocationAccuracy('high')}
+                    value={locationPrecision === 'high'}
+                    onValueChange={() => setLocationPrecision('high' as 'high' | 'low')}
                     radioButton
                 />
                 <ToggleItem
-                    label="Battery Saver"
-                    description="Network only (Reduces battery use)"
-                    value={locationAccuracy === 'medium'}
-                    onValueChange={() => setLocationAccuracy('medium')}
-                    radioButton
-                />
-                <ToggleItem
-                    label="GPS Only"
-                    description="Better accuracy, higher battery use"
-                    value={locationAccuracy === 'gps'}
-                    onValueChange={() => setLocationAccuracy('gps')}
+                    label="Low Accuracy"
+                    description="Network only"
+                    value={locationPrecision === 'low'}
+                    onValueChange={() => setLocationPrecision('low')}
                     radioButton
                 />
             </SettingsSection>
 
-            <SettingsSection title="Tracking Preferences">
-                <ToggleItem
-                    label="Background Tracking"
-                    description="Continue tracking when app is in background"
-                    value={backgroundTracking}
-                    onValueChange={setBackgroundTracking}
-                />
+            <SettingsSection title="Ride Features">
                 <ToggleItem
                     label="Auto-Pause Detection"
                     description="Pause tracking when stopped"
                     value={true}
-                    onValueChange={() => {}}
-                />
-                <ToggleItem
-                    label="Crash Detection"
-                    value={crashDetection}
-                    onValueChange={setCrashDetection}
+                    onValueChange={() => {}} //todo
                 />
             </SettingsSection>
 
             <SettingsSection title="Privacy">
                 <NavigationItem
-                    label="Location Permissions"
-                    onPress={() => console.log('Open permissions')}
-                />
-                <NavigationItem
-                    label="Location History"
-                    onPress={() => console.log('View history')}
-                />
-                <ToggleItem
-                    label="Share Location Data"
-                    description="Help improve bike routes (anonymous)"
-                    value={true}
-                    onValueChange={() => {}}
-                />
-            </SettingsSection>
-
-            <SettingsSection title="Advanced">
-                <NavigationItem
-                    label="GPS Diagnostics"
-                    onPress={() => console.log('Open diagnostics')}
-                />
-                <NavigationItem
-                    label="Calibrate Sensors"
-                    onPress={() => console.log('Calibrate')}
+                    label="Permissions"
+                    onPress={() => OpenSettings.openSettings()}
                 />
             </SettingsSection>
         </ScrollView>
