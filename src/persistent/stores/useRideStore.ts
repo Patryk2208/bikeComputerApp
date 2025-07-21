@@ -51,11 +51,13 @@ export const useRideStore = create<RideState>()(
 
             async AddTrackPoint(point: TrackPoint) {
                 const { currentRide } = get();
-                if (!currentRide) throw new Error('No active ride');
+                if (!currentRide) {
+                    console.log('No current ride');
+                }
 
                 const inPoint = {
                     ...point,
-                    RideId: currentRide.RideId,
+                    RideId: currentRide!.RideId,
                     Timestamp: point.Timestamp,
                 };
 
@@ -68,12 +70,13 @@ export const useRideStore = create<RideState>()(
                         ]);
                     set({
                         currentRide: {
-                            ...currentRide,
-                            TrackPoints: [...currentRide.TrackPoints, inPoint]
+                            ...currentRide!,
+                            TrackPoints: [...currentRide!.TrackPoints, inPoint]
                         }
                     });
+                    console.log("Track point added");
                 } catch (error) {
-                    console.error('Failed to save track point:', error);
+                    console.log('Failed to add track point:', error);
                 }
             },
 
@@ -85,7 +88,8 @@ export const useRideStore = create<RideState>()(
                     currentRide.Pauses = [...currentRide.Pauses, p];
                 }
                 catch (error) {
-                    console.error('Failed to pause ride:', error);
+                    console.log('Failed to pause ride:', error);
+                    throw error;
                 }
             },
 
@@ -96,7 +100,8 @@ export const useRideStore = create<RideState>()(
                     await Repository.ResumeRide([Date.now(), currentRide.Pauses.at(-1)!.PauseId]);
                 }
                 catch (error) {
-                    console.error('Failed to pause ride:', error);
+                    console.log('Failed to pause ride:', error);
+                    throw error;
                 }
             },
 
@@ -119,15 +124,16 @@ export const useRideStore = create<RideState>()(
                         currentRide.ElevationGain,
                         currentRide.RideId
                     ]);
-
-                    if (currentRide) {
-                        set(state => ({
-                            rides: [currentRide, ...state.rides],
-                            currentRide: null
-                        }));
-                    }
                 } catch (error) {
-                    console.error('Failed to finish ride:', error);
+                    console.log('Failed to finish ride:', error);
+                    throw error;
+                }
+
+                if (currentRide) {
+                    set(state => ({
+                        rides: [currentRide, ...state.rides],
+                        currentRide: null
+                    }));
                 }
             },
 
@@ -149,7 +155,7 @@ export const useRideStore = create<RideState>()(
                     return ride;
                 } catch (error) {
                     set({ error: 'Failed to load ride details', loading: false });
-                    return null;
+                    throw error;
                 }
             },
 
@@ -163,6 +169,7 @@ export const useRideStore = create<RideState>()(
                     }));
                 } catch (error) {
                     set({ error: 'Failed to delete ride', loading: false });
+                    //todo
                 }
             },
         }),

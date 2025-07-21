@@ -8,10 +8,11 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/navigation';
 import Icon from '@react-native-vector-icons/material-icons';
 import { useRideStore } from '../../persistent/stores/useRideStore';
-import Geolocation from 'react-native-geolocation-service';
+import Geolocation, {GeoPosition} from 'react-native-geolocation-service';
 import {TrackPoint, TrackPointDetails} from '../../persistent/database/orm/TrackPoints.ts';
 import MapPreview from "../../components/ride/MapPreview.tsx";
 import {LoadingScreen} from "../LoadingScreen.tsx";
+import { calculateAccelMagnitude, calculateDistance } from "../../utils/formatUtils.ts";
 
 type RideScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -21,18 +22,23 @@ type RideScreenNavigationProp = NativeStackNavigationProp<
 export default function RideScreen() {
     const navigation = useNavigation<RideScreenNavigationProp>();
     const { StartNewRide, AddTrackPoint, FinishRide, PauseRide, ResumeRide } = useRideStore();
+    const [isScreenReady, setIsScreenReady] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
+
+    const [position, setPosition] = useState<any>(null);
+    const [lastPosition, setLastPosition] = useState<any>(null);
+
     const [speed, setSpeed] = useState(0);
     const [distance, setDistance] = useState(0);
-    const [duration, setDuration] = useState(0);
     const [elevation, setElevation] = useState(0);
-    const [position, setPosition] = useState<any>(null);
     const [acceleration, setAcceleration] = useState({ x: 0, y: 0, z: 0 });
+
     const watchId = useRef<number | null>(null);
+
     const [startTime, setStartTime] = useState<number | null>(null);
-    const [lastPosition, setLastPosition] = useState<any>(null);
-    const [isLocationPermitted, setIsLocationPermitted] = useState(false);
-    const [isScreenReady, setIsScreenReady] = useState(false);
+    const [lastTimePoint, setLastTimePoint] = useState<number | null>(null);
+    const [duration, setDuration] = useState(0);
+    let interval = useRef<NodeJS.Timeout>({} as NodeJS.Timeout);
 
 
     useEffect(() => {
@@ -42,10 +48,15 @@ export default function RideScreen() {
             }
             catch (e) {
                 navigation.goBack();
-                return;
+                throw new Error('Ride could not be started');
             }
-            setStartTime(Date.now());
-            startTracking();
+            let st = Date.now();
+            setStartTime(st);
+            setLastTimePoint(st);
+            await startTracking();
+            interval.current = setInterval(() => {
+                setDuration(Date.now() - lastTimePoint!);
+            }, 1000);
         };
         const requestPermissions = async () => {
             const status = await PermissionsAndroid.request(
@@ -61,6 +72,7 @@ export default function RideScreen() {
             if (status !== PermissionsAndroid.RESULTS.GRANTED) {
                 console.log('Location permission denied');
                 navigation.goBack();
+                throw new Error('Location permission denied');
             }
         };
 
@@ -69,38 +81,46 @@ export default function RideScreen() {
                 initRide().then(
                     () => {
                         setIsScreenReady(true);
-                    }
-                )
-            }
+                    },
+                    () => {}
+                );
+            },
+            () => {}
         );
 
         return () => {
             if (watchId.current) Geolocation.clearWatch(watchId.current);
         };
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
-        let interval: NodeJS.Timeout | null = null;
-
-        if (startTime && !isPaused) {
-            interval = setInterval(() => {
-                setDuration(Math.floor((Date.now() - startTime) / 1000));
+        if (isPaused) {
+            clearTimeout(interval.current);
+            setDuration(duration + (Date.now() - lastTimePoint!));
+        }
+        else {
+            interval.current = setInterval(() => {
+                let now = Date.now();
+                setDuration(duration + (now - lastTimePoint!));
+                setLastTimePoint(now);
             }, 1000);
         }
 
         return () => {
-            if (interval) clearInterval(interval);
+            if (interval) clearInterval(interval.current);
         };
-    }, [startTime, isPaused]);
+// eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isPaused]);
 
-    const startTracking = useCallback(() => {
+    const startTracking = useCallback(async () => {
         watchId.current = Geolocation.watchPosition(
-            position => {
+            async (position: GeoPosition) => {
                 if (!isPaused) {
                     setPosition(position);
                     setSpeed(position.coords.speed || 0);
 
-                    AddTrackPoint(
+                    await AddTrackPoint(
                         new TrackPoint(
                             useRideStore.getState().currentRide!.RideId,
                             position.coords.latitude,
@@ -141,18 +161,33 @@ export default function RideScreen() {
     }, [])
 
 
-    const togglePause = () => {
+    const togglePause = async () => {
         if (!isPaused) {
-            PauseRide();
+            await PauseRide().then(
+                () => {
+                    setIsPaused(true);
+                },
+                () => {
+                    return;
+                }
+            )
         } else {
-            setStartTime(Date.now());
-            ResumeRide();
+            await ResumeRide().then(
+                () => {
+                    setLastTimePoint(Date.now());
+                    setIsPaused(false);
+                },
+                () => {
+                    return;
+                }
+            )
         }
-        setIsPaused(!isPaused);
     };
 
     const handleFinish = async () => {
         if (watchId.current) Geolocation.clearWatch(watchId.current);
+        if (interval) clearInterval(interval.current);
+        setIsScreenReady(false);
 
         await FinishRide({
             totalDistance: distance,
@@ -160,29 +195,7 @@ export default function RideScreen() {
             maxSpeed: speed * 3.6,
             elevationGain: elevation,
         });
-
         navigation.goBack();
-    };
-
-    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        // Haversine formula implementation
-        const R = 6371e3;
-        const f1 = lat1 * Math.PI / 180;
-        const f2 = lat2 * Math.PI / 180;
-        const df = (lat2 - lat1) * Math.PI / 180;
-        const dl = (lon2 - lon1) * Math.PI / 180;
-
-        const a = Math.sin(df / 2) * Math.sin(df / 2) +
-            Math.cos(f1) * Math.cos(f2) *
-            Math.sin(dl / 2) * Math.sin(dl / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        return R * c;
-    };
-
-    const calculateAccelMagnitude = () => {
-        const { x, y, z } = acceleration;
-        return Math.sqrt(x * x + y * y + z * z).toFixed(2);
     };
 
     return (
@@ -233,7 +246,7 @@ export default function RideScreen() {
                 <DataSection
                     position={position}
                     acceleration={acceleration}
-                    accelMagnitude={calculateAccelMagnitude()}
+                    accelMagnitude={calculateAccelMagnitude(acceleration.x, acceleration.y, acceleration.z)}
                 />
             </View>
         </SafeAreaView>
