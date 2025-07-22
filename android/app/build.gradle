@@ -94,7 +94,7 @@ android {
         }
         release {
             def keystoreProperties = new Properties()
-            def keystorePropertiesFile = rootProject.file('../../release_keys/bike_computer_app.keystore')
+            def keystorePropertiesFile = rootProject.file('../release_keys/keystore.properties')
 
             if (keystorePropertiesFile.exists()) {
                 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
