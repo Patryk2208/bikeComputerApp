@@ -4,11 +4,27 @@ import { useSettingsStore } from './stores/useSettingsStore';
 import {Step, SagaWorkflow} from "../utils/sagaUtils.ts";
 
 export async function InitializeServices() {
-
     let initializationSteps: Step[] = [
-        new Step(database.Initialize, database.Close),
-        new Step(useSettingsStore.getState().LoadSettings, () => {}),
-        new Step(useRideStore.getState().LoadAllRides, () => {}),
+        new Step(
+            async () => {
+                await database.Initialize();
+            },
+            async () => {
+                await database.Close();
+            }
+        ),
+        new Step(
+            async () => {
+                await useSettingsStore.getState().LoadSettings();
+            },
+            () => {}
+        ),
+        new Step(
+            async () => {
+                await useRideStore.getState().LoadAllRides();
+            },
+            () => {}
+        ),
     ]
     let workflow = new SagaWorkflow();
     workflow.AddJobs(initializationSteps);
@@ -22,5 +38,5 @@ export async function InitializeServices() {
                 throw new Error("Initialization failed");
             }
         }
-    )
+    );
 }

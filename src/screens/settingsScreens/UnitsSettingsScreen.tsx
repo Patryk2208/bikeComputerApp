@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import SettingsSection from '../../components/settings/SettingsSection';
 import BackButton from '../../components/common/BackButton';

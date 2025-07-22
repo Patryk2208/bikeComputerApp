@@ -18,7 +18,8 @@ export default function App() {
                 await InitializeServices();
             }
             catch (error) {
-                console.error("Mount: ", error);
+                console.log("Mount: ", error);
+                throw error;
             }
         }
 
@@ -27,7 +28,7 @@ export default function App() {
                 await database.Close();
             }
             catch (error) {
-                console.error("Error caught at unmount: ", error);
+                console.log("Error caught at unmount: ", error);
             }
         }
 
@@ -36,7 +37,7 @@ export default function App() {
                 setIsAppReady(true);
             },
             (error) => {
-                console.error("Error caught at mount: ", error);
+                console.log("Error caught at mount: ", error);
             }
         )
 

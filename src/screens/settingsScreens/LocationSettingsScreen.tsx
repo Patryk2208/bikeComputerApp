@@ -6,7 +6,6 @@ import NavigationItem from '../../components/settings/NavigationItem';
 import BackButton from "../../components/common/BackButton.tsx";
 import {useNavigation} from "@react-navigation/native";
 import {useSettingsStore} from "../../persistent/stores/useSettingsStore.ts";
-import OpenSettings from 'react-native-open-settings';
 
 export default function LocationSettingsScreen() {
     const {locationPrecision, setLocationPrecision} = useSettingsStore();
@@ -42,15 +41,15 @@ export default function LocationSettingsScreen() {
                     label="Auto-Pause Detection"
                     description="Pause tracking when stopped"
                     value={true}
-                    onValueChange={() => {}} //todo
-                />
+                    onValueChange={() => {}}
+                /> {/*todo*/}
             </SettingsSection>
 
             <SettingsSection title="Privacy">
                 <NavigationItem
                     label="Permissions"
-                    onPress={() => OpenSettings.openSettings()}
-                />
+                    onPress={() => {}}
+                /> {/*todo*/}
             </SettingsSection>
         </ScrollView>
     );

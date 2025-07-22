@@ -412,8 +412,15 @@ class Database {
             .then(
                 ([res]) => {
                     let qr = res.rows.item(0);
-                    let tpd = new TrackPointDetails(qr.altitude, qr.speed, qr.accuracy);
-                    tpd.TrackPointId = qr.track_point_id;
+                    let tpd: TrackPointDetails;
+                    if(qr === undefined) {
+                        tpd = new TrackPointDetails(null, null, -1);
+                        tpd.TrackPointId = -1;
+                    }
+                    else {
+                        tpd = new TrackPointDetails(qr.altitude, qr.speed, qr.accuracy);
+                        tpd.TrackPointId = qr.track_point_id;
+                    }
                     return tpd;
                 }
             )

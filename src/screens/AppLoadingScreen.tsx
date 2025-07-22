@@ -1,13 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, Image } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import {useSettingsStore} from "../persistent/stores/useSettingsStore.ts";
 
 export default function AppLoadingScreen() {
+    const {appVersion} = useSettingsStore();
     return (
         <View style={styles.container}>
-            {/*<Image
-                source={require('../../assets/loading-bike.png')}
-                style={styles.logo}
-            />*/}
 
             <Text style={styles.title}>Bike Monitor</Text>
 
@@ -22,7 +20,7 @@ export default function AppLoadingScreen() {
             </View>
 
             <View style={styles.footer}>
-                <Text style={styles.version}>v1.0.0</Text> //todo
+                <Text style={styles.version}>{appVersion}</Text>
             </View>
         </View>
     );

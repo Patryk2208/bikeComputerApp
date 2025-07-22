@@ -35,29 +35,13 @@ export default function RideScreen() {
 
     const watchId = useRef<number | null>(null);
 
-    const [startTime, setStartTime] = useState<number | null>(null);
-    const [lastTimePoint, setLastTimePoint] = useState<number | null>(null);
+    const startTime = useRef<number>(0);
+    const lastTimePoint = useRef<number>(0);
     const [duration, setDuration] = useState(0);
     let interval = useRef<NodeJS.Timeout>({} as NodeJS.Timeout);
 
 
     useEffect(() => {
-        const initRide = async () => {
-            try {
-                await StartNewRide();
-            }
-            catch (e) {
-                navigation.goBack();
-                throw new Error('Ride could not be started');
-            }
-            let st = Date.now();
-            setStartTime(st);
-            setLastTimePoint(st);
-            await startTracking();
-            interval.current = setInterval(() => {
-                setDuration(Date.now() - lastTimePoint!);
-            }, 1000);
-        };
         const requestPermissions = async () => {
             const status = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -74,6 +58,25 @@ export default function RideScreen() {
                 navigation.goBack();
                 throw new Error('Location permission denied');
             }
+        };
+        const initRide = async () => {
+            try {
+                await StartNewRide();
+            }
+            catch (e) {
+                navigation.goBack();
+            }
+            let st = Date.now();
+            startTime.current = st;
+            lastTimePoint.current = st;
+            console.error(`${startTime} - ${lastTimePoint}`);
+            await startTracking();
+            interval.current = setInterval(() => {
+                let now = Date.now();
+                setDuration(duration + (now - lastTimePoint.current));
+                console.error(`${now} - ${lastTimePoint.current}`);
+                lastTimePoint.current = now;
+            }, 1000);
         };
 
         requestPermissions().then(
@@ -97,13 +100,17 @@ export default function RideScreen() {
     useEffect(() => {
         if (isPaused) {
             clearTimeout(interval.current);
-            setDuration(duration + (Date.now() - lastTimePoint!));
+            let now = Date.now();
+            setDuration(duration + (now - lastTimePoint.current));
+            console.error(`${now} - ${lastTimePoint.current}`);
+            lastTimePoint.current = now;
         }
         else {
             interval.current = setInterval(() => {
                 let now = Date.now();
-                setDuration(duration + (now - lastTimePoint!));
-                setLastTimePoint(now);
+                setDuration(duration + (now - lastTimePoint.current));
+                console.error(`${now} - ${lastTimePoint.current}`);
+                lastTimePoint.current = now;
             }, 1000);
         }
 
@@ -174,7 +181,7 @@ export default function RideScreen() {
         } else {
             await ResumeRide().then(
                 () => {
-                    setLastTimePoint(Date.now());
+                    lastTimePoint.current = Date.now();
                     setIsPaused(false);
                 },
                 () => {

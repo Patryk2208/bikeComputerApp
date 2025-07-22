@@ -28,7 +28,7 @@ export class SagaWorkflow {
                 return false;
             }
         }
-        return true;
+        return !error;
     }
 
 }

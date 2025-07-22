@@ -7,6 +7,7 @@ import { formatHoursDuration } from "../../utils/formatUtils.ts"
 import {Ride} from "../../persistent/database/orm/Rides.ts";
 import {LoadingScreen} from "../LoadingScreen.tsx";
 import {RootStackParamList} from "../../types/navigation";
+import BackButton from "../../components/common/BackButton.tsx";
 
 //Only complete rides
 export default function RideDetailsScreen() {
@@ -33,12 +34,14 @@ export default function RideDetailsScreen() {
                 navigator.goBack();
             }
         )
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return isScreenReady ? (
         <ScrollView style={styles.container}>
             {/* Header Section */}
             <View style={styles.header}>
+                <BackButton onPress={navigator.goBack}/>
                 <Text style={styles.dateText}>
                     {new Date(DetailedRide.current.StartTime).toLocaleDateString()}
                 </Text>
@@ -67,7 +70,6 @@ export default function RideDetailsScreen() {
     );
 };
 
-// Styles
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -82,23 +84,6 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'space-between',
         marginBottom: 24,
-    },
-    tile: {
-        width: '48%',
-        backgroundColor: '#f8f9fa',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        alignItems: 'center',
-    },
-    tileTitle: {
-        fontSize: 16,
-        fontWeight: '500',
-        marginBottom: 8,
-    },
-    tileValue: {
-        fontSize: 24,
-        fontWeight: '700',
     },
     dateText: {
         fontSize: 18,

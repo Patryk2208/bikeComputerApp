@@ -54,9 +54,10 @@ export const useSettingsStore = create<SettingsState>()(
                 set({ locationPrecision });
             },
             LoadSettings: async () => {
-                await new Promise((resolve) => {
-                    return useSettingsStore.persist.onFinishHydration(resolve);
-                });
+                if(!useSettingsStore.persist.hasHydrated)
+                {
+                    await useSettingsStore.persist.rehydrate();
+                }
                 if(DeviceInfo.getVersion() !== get().appVersion)
                 {
                     set({appVersion: DeviceInfo.getVersion()});
