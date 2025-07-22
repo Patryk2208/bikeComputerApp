@@ -31,6 +31,19 @@ export class SagaWorkflow {
         return !error;
     }
 
+    public async Cleanup(): Promise<boolean> {
+        try {
+            for (let i = this.currentJobIndex - 1; i >= 0; --i) {
+                await this.jobs[i].undoFunction();
+            }
+            return true;
+        }
+        catch (err) {
+            console.log("Error while undoing steps: ", err);
+            return false;
+        }
+    }
+
 }
 
 

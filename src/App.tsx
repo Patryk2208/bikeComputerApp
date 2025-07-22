@@ -5,17 +5,17 @@
  */
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MainNavigator from './navigation/MainNavigator';
-import {InitializeServices} from "./persistent/InitializeServices.ts";
-import {useEffect, useState} from "react";
-import database from "./persistent/database/Database.ts";
+import {ServicesManager} from "./persistent/InitializeServices.ts";
+import {useEffect, useRef, useState} from "react";
 import AppLoadingScreen from "./screens/AppLoadingScreen.tsx";
 
 export default function App() {
     const [isAppReady, setIsAppReady] = useState(false);
+    const services = useRef<ServicesManager>({} as ServicesManager);
     useEffect(() => {
         const InitializeApp = async () => {
             try {
-                await InitializeServices();
+                await services.current.Start();
             }
             catch (error) {
                 console.log("Mount: ", error);
@@ -25,12 +25,14 @@ export default function App() {
 
         const CloseApp = async () => {
             try {
-                await database.Close();
+                await services.current.Stop();
             }
             catch (error) {
                 console.log("Error caught at unmount: ", error);
             }
         }
+
+        services.current = new ServicesManager();
 
         InitializeApp().then(
             () => {
@@ -42,7 +44,7 @@ export default function App() {
         )
 
         return () => {
-            CloseApp(); //todo
+            CloseApp();
         }
 
     }, [])

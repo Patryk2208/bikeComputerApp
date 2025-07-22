@@ -10,7 +10,8 @@ export default function MetricsBar({
     duration: number;
     elevation: number;
 }) {
-    const formatDuration = (seconds: number) => {
+    const formatDuration = (milliseconds: number) => {
+        const seconds = Math.floor(milliseconds / 1000);
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;

@@ -13,6 +13,7 @@ import {TrackPoint, TrackPointDetails} from '../../persistent/database/orm/Track
 import MapPreview from "../../components/ride/MapPreview.tsx";
 import {LoadingScreen} from "../LoadingScreen.tsx";
 import { calculateAccelMagnitude, calculateDistance } from "../../utils/formatUtils.ts";
+import BackgroundTimer from "react-native-background-timer"
 
 type RideScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -37,9 +38,21 @@ export default function RideScreen() {
 
     const startTime = useRef<number>(0);
     const lastTimePoint = useRef<number>(0);
-    const [duration, setDuration] = useState(0);
-    let interval = useRef<NodeJS.Timeout>({} as NodeJS.Timeout);
+    const duration = useRef(0);
+    const [time, setTime] = useState(0);
+    const frameRef = useRef<number | null>(null);
+    const isMounted = useRef(false);
 
+    const updateTimer = () => {
+        let now = Date.now();
+        duration.current += (now - lastTimePoint.current);
+        lastTimePoint.current = now;
+    };
+
+    const refreshTimerScreen = () => {
+        setTime(duration.current);
+        frameRef.current = requestAnimationFrame(refreshTimerScreen);
+    };
 
     useEffect(() => {
         const requestPermissions = async () => {
@@ -65,24 +78,23 @@ export default function RideScreen() {
             }
             catch (e) {
                 navigation.goBack();
+                throw new Error('Ride creation failed');
             }
-            let st = Date.now();
-            startTime.current = st;
-            lastTimePoint.current = st;
-            console.error(`${startTime} - ${lastTimePoint}`);
-            await startTracking();
-            interval.current = setInterval(() => {
-                let now = Date.now();
-                setDuration(duration + (now - lastTimePoint.current));
-                console.error(`${now} - ${lastTimePoint.current}`);
-                lastTimePoint.current = now;
-            }, 1000);
         };
 
         requestPermissions().then(
             ()=> {
                 initRide().then(
-                    () => {
+                    async () => {
+                        let st = Date.now();
+                        startTime.current = st;
+                        lastTimePoint.current = st;
+                        await startTracking();
+                        BackgroundTimer.runBackgroundTimer(
+                            updateTimer,
+                            1000,
+                        );
+                        frameRef.current = requestAnimationFrame(refreshTimerScreen);
                         setIsScreenReady(true);
                     },
                     () => {}
@@ -92,30 +104,30 @@ export default function RideScreen() {
         );
 
         return () => {
+            cancelAnimationFrame(frameRef.current!);
+            BackgroundTimer.stopBackgroundTimer();
             if (watchId.current) Geolocation.clearWatch(watchId.current);
         };
 // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
-        if (isPaused) {
-            clearTimeout(interval.current);
-            let now = Date.now();
-            setDuration(duration + (now - lastTimePoint.current));
-            console.error(`${now} - ${lastTimePoint.current}`);
-            lastTimePoint.current = now;
+        if (!isMounted.current) {
+            isMounted.current = true;
+        }
+        else if (isPaused) {
+            BackgroundTimer.stopBackgroundTimer();
+            updateTimer();
         }
         else {
-            interval.current = setInterval(() => {
-                let now = Date.now();
-                setDuration(duration + (now - lastTimePoint.current));
-                console.error(`${now} - ${lastTimePoint.current}`);
-                lastTimePoint.current = now;
-            }, 1000);
+            BackgroundTimer.runBackgroundTimer(
+                updateTimer,
+                1000,
+            );
         }
 
         return () => {
-            if (interval) clearInterval(interval.current);
+            BackgroundTimer.stopBackgroundTimer();
         };
 // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPaused]);
@@ -193,12 +205,11 @@ export default function RideScreen() {
 
     const handleFinish = async () => {
         if (watchId.current) Geolocation.clearWatch(watchId.current);
-        if (interval) clearInterval(interval.current);
         setIsScreenReady(false);
 
         await FinishRide({
             totalDistance: distance,
-            avgSpeed: distance > 0 ? (distance / duration) * 3.6 : 0,
+            avgSpeed: distance > 0 ? (distance / duration.current) * 3.6 : 0,
             maxSpeed: speed * 3.6,
             elevationGain: elevation,
         });
@@ -242,7 +253,7 @@ export default function RideScreen() {
                 {/* Metrics Bar */}
                 <MetricsBar
                     distance={distance / 1000}
-                    duration={duration}
+                    duration={time}
                     elevation={elevation}
                 />
 
