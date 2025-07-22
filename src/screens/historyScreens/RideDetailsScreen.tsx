@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import { View, ScrollView, StyleSheet, Text } from 'react-native';
+import {View, ScrollView, StyleSheet, Text, Button, Alert} from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {useRideStore} from "../../persistent/stores/useRideStore.ts";
 import MetricTile from '../../components/history/MetricTile.tsx';
@@ -8,6 +8,7 @@ import {Ride} from "../../persistent/database/orm/Rides.ts";
 import {LoadingScreen} from "../LoadingScreen.tsx";
 import {RootStackParamList} from "../../types/navigation";
 import BackButton from "../../components/common/BackButton.tsx";
+import DeleteButton from "../../components/common/DeleteButton.tsx";
 
 //Only complete rides
 export default function RideDetailsScreen() {
@@ -15,7 +16,30 @@ export default function RideDetailsScreen() {
     const navigator = useNavigation();
     const [isScreenReady, setIsScreenReady] = useState(false);
     let DetailedRide = useRef<Ride>({} as Ride)
-    const { GetRideDetails } = useRideStore();
+    const { GetRideDetails, DeleteRide } = useRideStore();
+
+    const handleDelete = async () => {
+        Alert.alert(
+            'Delete Ride',
+            'Are you sure you want to delete this ride?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await DeleteRide(DetailedRide.current.RideId);
+                        navigator.goBack();
+                    },
+                },
+            ],
+            { cancelable: true }
+        );
+    };
+
     useEffect(() => {
         if (route.params === undefined) {
             navigator.goBack();
@@ -48,6 +72,7 @@ export default function RideDetailsScreen() {
                 <Text style={styles.durationText}>
                     {formatHoursDuration(DetailedRide.current.EndTime!.valueOf() - DetailedRide.current.StartTime.valueOf())}
                 </Text>
+                <DeleteButton onPress={handleDelete} />
             </View>
 
             {/* Metrics Grid */}
@@ -77,7 +102,7 @@ const styles = StyleSheet.create({
     },
     header: {
         marginBottom: 24,
-        alignItems: 'center',
+        alignItems: 'stretch',
     },
     gridContainer: {
         flexDirection: 'row',

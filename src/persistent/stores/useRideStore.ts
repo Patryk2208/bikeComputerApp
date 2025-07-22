@@ -169,7 +169,6 @@ export const useRideStore = create<RideState>()(
                     }));
                 } catch (error) {
                     set({ error: 'Failed to delete ride', loading: false });
-                    //todo
                 }
             },
         }),
