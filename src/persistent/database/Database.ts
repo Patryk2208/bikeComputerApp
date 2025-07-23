@@ -68,11 +68,10 @@ class Database {
             this.db = await SQLite.openDatabase({
                 name: 'BikeAppRides.db',
                 location: 'default',
-                createFromLocation: 1,
             });
         }
         catch (error) {
-            console.error('Database open failed:', error);
+            console.log('Database open failed:', error);
             throw error;
         }
         try {
@@ -86,7 +85,7 @@ class Database {
             await this.Commit();
         }
         catch (error) {
-            console.error('Database initialization failed:', error);
+            console.log('Database initialization failed:', error);
             await this.Rollback();
             throw error;
         }
